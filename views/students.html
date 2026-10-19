@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
+  <script src="/client.js" defer></script>
 </head>
 <body>
 
@@ -38,10 +39,10 @@
         <h2>
           <span>📋</span> In-Memory Registered Students Roster
         </h2>
-        <p>Demonstrating secure data retrieval: Passwords are protected with cryptographic salt + hash and never exposed in any view or API.</p>
+        <p>Demonstrating secure data retrieval via <strong>GET /api/students</strong>: Passwords are protected with cryptographic salt + hash and never exposed in any view or API.</p>
       </div>
       <div class="badge-demo">
-        Total Students: {{STUDENTS_COUNT}}
+        Enrolled Count: <span id="rosterCountDisplay">{{STUDENTS_COUNT}}</span>
       </div>
     </section>
 
@@ -49,35 +50,99 @@
     <div class="card">
       <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-          <h2 class="card-title">Enrolled Students</h2>
-          <p class="card-subtitle">List of students currently stored in server RAM during this active session.</p>
+          <h2 class="card-title">Enrolled Students Directory</h2>
+          <p class="card-subtitle">Live frontend table connected directly to Node.js Backend API.</p>
         </div>
-        <a href="/" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Register New Student</a>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary" id="btnRefreshStudents" style="padding: 0.5rem 0.85rem; font-size: 0.85rem;">🔄 Refresh Live</button>
+          <a href="/" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Register New Student</a>
+        </div>
       </div>
 
       <div class="card-body">
         
+        <!-- Interactive Toolbar: Live Search & Course Filter -->
+        <div class="table-toolbar">
+          <div class="toolbar-search">
+            <input 
+              type="text" 
+              id="studentSearchInput" 
+              placeholder="🔍 Live Search by Name, Email, or Student ID..." 
+              class="form-control"
+              style="padding: 0.5rem 0.85rem; font-size: 0.88rem;"
+            >
+          </div>
+          <div class="toolbar-select">
+            <select id="studentCourseFilter" class="form-control" style="padding: 0.5rem 0.85rem; font-size: 0.88rem;">
+              <option value="">All Course Programs</option>
+              <option value="Computer Science and Engineering">Computer Science and Engineering</option>
+              <option value="Information Technology">Information Technology</option>
+              <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+              <option value="Electronics & Telecommunication Engineering">Electronics & Telecommunication</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+            </select>
+          </div>
+          <div class="toolbar-buttons">
+            <button type="button" class="btn btn-secondary" id="btnExportJson" style="padding: 0.5rem 0.75rem; font-size: 0.8rem;" title="Download active roster as JSON">Export JSON</button>
+            <button type="button" class="btn btn-secondary" id="btnExportCsv" style="padding: 0.5rem 0.75rem; font-size: 0.8rem;" title="Download active roster as CSV">Export CSV</button>
+          </div>
+        </div>
+
         <!-- Explanatory note about In-Memory data reset -->
         <div class="alert alert-info">
           <div class="alert-icon">💡</div>
           <div class="alert-content">
             <strong>Practical Examination Note on In-Memory Storage:</strong>
-            <p>As per the practical requirements, student registrations are retained in volatile Node.js server memory (RAM array). When the server restarts or deploys a new build, this list resets. Plain-text passwords were cryptographically hashed upon reception and discarded immediately.</p>
+            <p>Student registrations are retained in volatile Node.js server memory (RAM array). When the server restarts, this list resets. Plain-text passwords were cryptographically hashed upon reception and discarded immediately.</p>
           </div>
         </div>
 
-        {{STUDENTS_TABLE}}
+        <div id="studentsTableContainer">
+          {{STUDENTS_TABLE}}
+        </div>
 
       </div>
     </div>
 
   </main>
 
+  <!-- Live Frontend ⟷ Backend Inspector Console -->
+  <aside class="live-inspector-drawer" id="liveInspectorDrawer">
+    <div class="inspector-dock-header" id="btnToggleInspector" title="Click to view live JSON requests and responses between Frontend and Node.js Backend">
+      <div class="inspector-title-group">
+        <span>⚡ Live Frontend ⟷ Backend Inspector</span>
+        <span class="inspector-badge-count" id="inspectorCountBadge">0</span>
+        <span class="inspector-status-pill">Backend API Connected</span>
+      </div>
+      <div style="font-size: 0.8rem; color: #94a3b8;">
+        Click to toggle console ▲
+      </div>
+    </div>
+    <div class="inspector-body">
+      <div class="inspector-toolbar-row">
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <span style="font-size: 0.75rem; color: #94a3b8;">Quick API Tests:</span>
+          <button type="button" class="inspector-btn" id="btnPingHealth">Ping /api/health</button>
+          <button type="button" class="inspector-btn" id="btnGetStudents">Get /api/students</button>
+          <button type="button" class="inspector-btn" id="btnGetCourses">Get /api/courses</button>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="inspector-btn" id="btnClearInspector">Clear Logs</button>
+          <button type="button" class="inspector-btn" id="btnCloseInspector">✕ Close</button>
+        </div>
+      </div>
+      <div class="inspector-logs-area" id="inspectorLogsList">
+        <div class="inspector-empty">No API calls recorded yet. Click a test button above or perform actions in the roster.</div>
+      </div>
+    </div>
+  </aside>
+
   <!-- Footer -->
-  <footer class="footer">
+  <footer class="footer" style="margin-bottom: 45px;">
     <div class="footer-container">
       <div>
-        <strong>College Practical Examination</strong> - Web Technology (Node.js &amp; Express.js)
+        <strong>College Practical Examination</strong> - Web Technology (Decoupled Frontend + Node.js Backend)
       </div>
       <div class="footer-badge">
         Server State: In-Memory Storage • Passwords Hashed with PBKDF2

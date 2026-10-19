@@ -54,22 +54,23 @@ student-registration/
 ├── .gitignore                      # Excludes node_modules, logs, and environment secrets
 │
 ├── routes/
-│   └── studentRoutes.js            # Modular Express router, view rendering, in-memory DB
+│   └── studentRoutes.js            # Modular Express router, REST API (/api/*), SSR views & DB
 │
 ├── validators/
 │   └── studentValidator.js         # Dedicated server-side validation rules & sanitization
 │
 ├── public/
+│   ├── client.js                   # Frontend controller (Interactive validation, Fetch API, Live Inspector)
 │   └── style.css                   # Custom responsive CSS design system
 │
 ├── views/
-│   ├── register.html               # Registration form view with server token placeholders
+│   ├── register.html               # Registration view (Dual Mode: Frontend API vs SSR Form)
 │   ├── success.html                # Confirmation view with student summary & security note
-│   ├── students.html               # Roster view displaying registered students
+│   ├── students.html               # Interactive students directory with search, filter & export
 │   └── 404.html                    # Custom 404 Not Found error page
 │
 ├── test/
-│   ├── test-validation.js          # Automated test suite (58 passing assertions)
+│   ├── test-validation.js          # Automated test suite (80 passing assertions)
 │   └── verify-scenarios.js         # Live HTTP server scenario verification script
 │
 └── README.md                       # Comprehensive documentation and viva guide
@@ -91,16 +92,49 @@ student-registration/
 
 ---
 
-## 5. Routing Architecture
+## 5. Dual Architecture: Frontend & Backend
+
+This application is built with a dual architecture allowing students to demonstrate both **Modern Decoupled Frontend (Fetch API / SPA)** and **Traditional Full-Stack SSR**:
+
+### 🌐 Frontend Layer (`public/client.js`, `public/style.css`, `views/`)
+1. **Interactive Real-Time Validation UX**:
+   - Visual **Password Strength Meter** (evaluates 5 criteria dynamically: length, uppercase, lowercase, numbers, symbols).
+   - Real-time **Password Match Indicator** (instantly flags mismatches before submit).
+   - Dynamic clearing of field validation errors as the student types.
+2. **Asynchronous API Mode (Default)**:
+   - Form submissions are intercepted and sent via `fetch('/api/register')`.
+   - On error: Inline errors and summary banners are animated without reloading the page.
+   - On success: An animated confirmation modal displays the generated student ID and PBKDF2 hash stamp.
+3. **Live Frontend ⟷ Backend Inspector**:
+   - Docked at the bottom of the page (`⚡ Live Frontend ⟷ Backend Inspector`).
+   - Visually logs real-time HTTP requests, status codes, duration in milliseconds, and JSON request/response payloads.
+   - Includes quick-test buttons: `Ping /api/health`, `Get /api/students`, `Get /api/courses`.
+4. **Interactive Enrolled Students Directory**:
+   - Live search filter by Name, Email, or Student ID.
+   - Filter by Course program dropdown.
+   - Live Delete student button (`DELETE /api/students/:id`).
+   - Export active roster to **JSON** or **CSV**.
+
+### 📡 Backend REST API Layer (`routes/studentRoutes.js`)
+
+| Method | Endpoint | Request Body | Description | Status Code |
+| :--- | :--- | :--- | :--- | :--- |
+| **POST** | `/api/register` | JSON / Form | Dedicated REST API: validates student, hashes password with PBKDF2, saves in RAM. | `201 Created` / `422 Unprocessable` |
+| **GET** | `/api/students` | None | Returns JSON roster of all enrolled students (passwords omitted). | `200 OK` |
+| **GET** | `/api/students/:id` | None | Returns JSON record for a specific Student ID. | `200 OK` / `404 Not Found` |
+| **DELETE** | `/api/students/:id` | None | Deletes student from server memory by ID. | `200 OK` / `404 Not Found` |
+| **GET** | `/api/courses` | None | Returns approved course whitelist in JSON. | `200 OK` |
+| **GET** | `/api/health` | None | Returns server uptime, node version, and memory registration count. | `200 OK` |
+
+### 📄 Classic Server-Side Rendered (SSR) Routes
 
 | Method | Endpoint | Description | Status Code |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/` | Serves the student registration form view. | `200 OK` |
-| **POST** | `/register` | Validates form data on server. On error, re-renders form with preserved safe values. On success, hashes password, saves to memory, and redirects to `/success?id=...`. | `422 Unprocessable Entity` (Errors)<br>`302 Found` (Success Redirect) |
-| **GET** | `/success` | Displays registration confirmation. If accessed directly without an ID or with an invalid ID, displays a friendly restricted access notice. | `200 OK` |
-| **GET** | `/students` | Displays HTML roster of registered students without exposing passwords. If `Accept: application/json` or `?format=json` is provided, returns sanitized JSON. | `200 OK` |
-| **GET** | `/health` | Returns server health status, uptime, node version, and memory registrations count in JSON. | `200 OK` |
-| **ALL** | `*` (Any unmapped route) | Custom 404 middleware catching undefined routes and serving `views/404.html`. | `404 Not Found` |
+| **GET** | `/` | Serves the student registration form HTML view. | `200 OK` |
+| **POST** | `/register` | Classic form submission route. Supports both SSR (PRG pattern) and JSON response. | `422 Unprocessable` / `302 Redirect` |
+| **GET** | `/success` | Displays registration confirmation. Guarded against direct unauthorized access. | `200 OK` |
+| **GET** | `/students` | Renders HTML roster of registered students. | `200 OK` |
+| **ALL** | `*` | Custom 404 middleware catching undefined routes and serving `views/404.html`. | `404 Not Found` |
 
 ---
 

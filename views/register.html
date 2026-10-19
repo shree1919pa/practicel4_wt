@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
+  <script src="/client.js" defer></script>
 </head>
 <body>
 
@@ -38,12 +39,28 @@
         <h2>
           <span>📌</span> Practical Examination: Web Technology
         </h2>
-        <p>Demonstrating robust, multi-layer server-side validation using Node.js modules without client-side bypass vulnerabilities.</p>
+        <p>Demonstrating decoupled <strong>Frontend (SPA &amp; Fetch API)</strong> and <strong>Backend (Node.js &amp; Express REST API)</strong> architecture with server-side validation.</p>
       </div>
-      <div class="badge-demo">
-        Server-Side Validation Active
+      <div class="badge-demo badge-api-mode" id="modeIndicatorBadge">
+        🟢 Frontend API Mode (Fetch / Decoupled)
       </div>
     </section>
+
+    <!-- Architecture Mode Switcher -->
+    <div class="mode-switcher-container" id="architectureModeSwitcher">
+      <div class="mode-switcher-title">
+        <span>⚙️</span>
+        <span>Select Architecture Mode for Demonstration:</span>
+      </div>
+      <div class="mode-switcher">
+        <button type="button" class="mode-btn active" id="btnModeApi" title="Asynchronous Fetch API with JSON responses and instant interactive feedback">
+          <span>🟢</span> Frontend API Mode (Fetch)
+        </button>
+        <button type="button" class="mode-btn" id="btnModeSsr" title="Traditional Server-Side Rendered form submission with HTTP 422 re-render">
+          <span>🔵</span> Classic SSR Mode (Form POST)
+        </button>
+      </div>
+    </div>
 
     <!-- Registration Card -->
     <div class="card">
@@ -164,6 +181,23 @@
                 >
               </div>
               {{PASSWORD_ERROR}}
+              <!-- Frontend Real-Time Password Strength Meter -->
+              <div class="password-strength-wrap" id="passwordStrengthContainer">
+                <div class="strength-meta">
+                  <span>Strength: <strong id="passwordStrengthText">Evaluating...</strong></span>
+                  <span>Interactive UX</span>
+                </div>
+                <div class="strength-bar-bg">
+                  <div class="strength-bar-fill" id="passwordStrengthBar"></div>
+                </div>
+                <ul class="password-reqs-list">
+                  <li class="req-chip" id="reqLength">8+ Chars</li>
+                  <li class="req-chip" id="reqUpper">Uppercase</li>
+                  <li class="req-chip" id="reqLower">Lowercase</li>
+                  <li class="req-chip" id="reqDigit">Digit (0-9)</li>
+                  <li class="req-chip" id="reqSpecial">Symbol</li>
+                </ul>
+              </div>
             </div>
 
             <!-- 6. Confirm Password -->
@@ -183,6 +217,9 @@
                   autocomplete="new-password"
                   aria-describedby="confirmPassword-error"
                 >
+              </div>
+              <div>
+                <span class="match-badge" id="passwordMatchBadge" style="display: none;"></span>
               </div>
               {{CONFIRM_PASSWORD_ERROR}}
             </div>
@@ -207,7 +244,7 @@
           <!-- Action Buttons -->
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" id="submitBtn">
-              <span>Submit Registration</span>
+              <span class="btn-text">Submit Registration</span>
               <span>→</span>
             </button>
             <a href="/" class="btn btn-secondary">Reset Form</a>
@@ -220,11 +257,42 @@
     </div>
   </main>
 
+  <!-- Live Frontend ⟷ Backend Inspector Console -->
+  <aside class="live-inspector-drawer" id="liveInspectorDrawer">
+    <div class="inspector-dock-header" id="btnToggleInspector" title="Click to view live JSON requests and responses between Frontend and Node.js Backend">
+      <div class="inspector-title-group">
+        <span>⚡ Live Frontend ⟷ Backend Inspector</span>
+        <span class="inspector-badge-count" id="inspectorCountBadge">0</span>
+        <span class="inspector-status-pill">Backend API Connected</span>
+      </div>
+      <div style="font-size: 0.8rem; color: #94a3b8;">
+        Click to toggle console ▲
+      </div>
+    </div>
+    <div class="inspector-body">
+      <div class="inspector-toolbar-row">
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <span style="font-size: 0.75rem; color: #94a3b8;">Quick API Tests:</span>
+          <button type="button" class="inspector-btn" id="btnPingHealth">Ping /api/health</button>
+          <button type="button" class="inspector-btn" id="btnGetStudents">Get /api/students</button>
+          <button type="button" class="inspector-btn" id="btnGetCourses">Get /api/courses</button>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="inspector-btn" id="btnClearInspector">Clear Logs</button>
+          <button type="button" class="inspector-btn" id="btnCloseInspector">✕ Close</button>
+        </div>
+      </div>
+      <div class="inspector-logs-area" id="inspectorLogsList">
+        <div class="inspector-empty">No API calls recorded yet. Submit the registration form or click a test button above.</div>
+      </div>
+    </div>
+  </aside>
+
   <!-- Footer -->
-  <footer class="footer">
+  <footer class="footer" style="margin-bottom: 45px;">
     <div class="footer-container">
       <div>
-        <strong>College Practical Examination</strong> - Web Technology (Node.js &amp; Express.js)
+        <strong>College Practical Examination</strong> - Web Technology (Decoupled Frontend + Node.js Backend)
       </div>
       <div class="footer-badge">
         Server State: In-Memory Storage • Passwords Hashed with PBKDF2

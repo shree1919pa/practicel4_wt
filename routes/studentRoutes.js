@@ -305,32 +305,17 @@ router.get('/', (req, res) => {
 });
 
 /**
- * POST /register
- * Validates form submission on the server.
- * - On validation error: Re-renders form with HTTP 422, preserving safe inputs.
- * - On success: Hashes password, stores record in memory, redirects to /success.
+ * Core registration processor shared across SSR and API routes.
  */
-router.post('/register', (req, res) => {
-  // Execute server-side validation against incoming body
-  const validationResult = validateStudentRegistration(req.body, students);
-
+function processRegistrationData(rawData) {
+  const validationResult = validateStudentRegistration(rawData, students);
   if (!validationResult.isValid) {
-    // Return HTTP 422 Unprocessable Entity
-    const errorPageHtml = renderRegisterView({
-      errors: validationResult.errors,
-      values: validationResult.sanitized // Safe fields only (fullName, email, age, course)
-    });
-    return res.status(422).send(errorPageHtml);
+    return { success: false, validationResult };
   }
 
-  // Form passed all validation rules
   const { sanitized } = validationResult;
-  const rawPassword = req.body.password;
-
-  // Cryptographically hash password (PBKDF2 SHA-512)
+  const rawPassword = rawData.password || '';
   const { salt, hash } = hashPassword(rawPassword);
-
-  // Generate unique student ID (STU-XXXXXX)
   const studentId = 'STU-' + Math.floor(100000 + Math.random() * 900000);
 
   const newStudent = {
@@ -348,11 +333,179 @@ router.post('/register', (req, res) => {
     createdAt: Date.now()
   };
 
-  // Store in memory
   students.push(newStudent);
+  return { success: true, student: newStudent };
+}
 
-  // Post/Redirect/Get (PRG) pattern to prevent duplicate submissions
-  res.redirect('/success?id=' + encodeURIComponent(studentId));
+/**
+ * Returns safe student projection for API responses (passwords never exposed).
+ */
+function getSafeStudent(s) {
+  return {
+    id: s.id,
+    fullName: s.fullName,
+    email: s.email,
+    age: s.age,
+    course: s.course,
+    registeredAt: s.registeredAt,
+    security: '🔒 PBKDF2 SHA-512 (Hashed & Salted)'
+  };
+}
+
+/**
+ * POST /register
+ * Dual-Mode Route:
+ * - When requested by client-side Fetch/API (JSON), responds with JSON (HTTP 201 or 422).
+ * - When submitted via traditional HTML form POST, performs SSR re-render or 302 PRG redirect.
+ */
+router.post('/register', (req, res) => {
+  const wantsJson = req.headers.accept?.includes('application/json') || 
+                    req.is('application/json') || 
+                    req.query.format === 'json';
+
+  const result = processRegistrationData(req.body);
+
+  if (!result.success) {
+    if (wantsJson) {
+      return res.status(422).json({
+        success: false,
+        message: 'Server-side validation failed.',
+        errors: result.validationResult.errors,
+        sanitized: result.validationResult.sanitized
+      });
+    }
+
+    const errorPageHtml = renderRegisterView({
+      errors: result.validationResult.errors,
+      values: result.validationResult.sanitized
+    });
+    return res.status(422).send(errorPageHtml);
+  }
+
+  if (wantsJson) {
+    return res.status(201).json({
+      success: true,
+      message: 'Student registration successful!',
+      student: getSafeStudent(result.student),
+      totalRegistered: students.length,
+      redirectUrl: '/success?id=' + encodeURIComponent(result.student.id)
+    });
+  }
+
+  // Traditional Post/Redirect/Get (PRG) pattern for browser forms
+  res.redirect('/success?id=' + encodeURIComponent(result.student.id));
+});
+
+// ============================================================================
+// Dedicated REST API Endpoints (/api/...)
+// ============================================================================
+
+/**
+ * POST /api/register
+ * Dedicated REST API endpoint for modern frontend clients.
+ */
+router.post('/api/register', (req, res) => {
+  const result = processRegistrationData(req.body);
+
+  if (!result.success) {
+    return res.status(422).json({
+      success: false,
+      message: 'Server-side validation failed.',
+      errors: result.validationResult.errors,
+      sanitized: result.validationResult.sanitized
+    });
+  }
+
+  return res.status(201).json({
+    success: true,
+    message: 'Student registered successfully into server memory!',
+    student: getSafeStudent(result.student),
+    totalRegistered: students.length,
+    redirectUrl: '/success?id=' + encodeURIComponent(result.student.id)
+  });
+});
+
+/**
+ * GET /api/students
+ * Returns JSON roster of enrolled students.
+ */
+router.get('/api/students', (req, res) => {
+  const safeList = students.map(getSafeStudent);
+  res.status(200).json({
+    success: true,
+    count: safeList.length,
+    storage: 'volatile in-memory RAM (resets on server restart)',
+    students: safeList
+  });
+});
+
+/**
+ * GET /api/students/:id
+ * Fetches an individual registered student by Student ID.
+ */
+router.get('/api/students/:id', (req, res) => {
+  const student = students.find(s => s.id === req.params.id);
+  if (!student) {
+    return res.status(404).json({
+      success: false,
+      message: `Student with ID "${req.params.id}" not found in current session.`
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    student: getSafeStudent(student)
+  });
+});
+
+/**
+ * DELETE /api/students/:id
+ * Deletes a student from in-memory array.
+ */
+router.delete('/api/students/:id', (req, res) => {
+  const targetId = req.params.id;
+  const index = students.findIndex(s => s.id === targetId);
+
+  if (index === -1) {
+    return res.status(404).json({
+      success: false,
+      message: `Student with ID "${targetId}" not found.`
+    });
+  }
+
+  const [removed] = students.splice(index, 1);
+  return res.status(200).json({
+    success: true,
+    message: `Student "${removed.fullName}" (${removed.id}) successfully removed.`,
+    studentId: targetId,
+    remainingCount: students.length
+  });
+});
+
+/**
+ * GET /api/courses
+ * Returns the whitelist of allowed courses for dropdowns or client validation.
+ */
+router.get('/api/courses', (req, res) => {
+  res.status(200).json({
+    success: true,
+    courses: ALLOWED_COURSES
+  });
+});
+
+/**
+ * GET /api/health
+ * Backend health check endpoint with environment metadata.
+ */
+router.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    service: 'Student Registration System REST API',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    registeredStudentsInMemory: students.length,
+    environment: process.env.NODE_ENV || 'development',
+    nodeVersion: process.version
+  });
 });
 
 /**
@@ -376,7 +529,6 @@ router.get('/students', (req, res) => {
   const isJson = req.query.format === 'json' || req.headers.accept?.includes('application/json');
 
   if (isJson) {
-    // Sanitized output for API consumers (passwords and raw hashes excluded)
     const sanitizedStudents = students.map(s => ({
       id: s.id,
       fullName: s.fullName,

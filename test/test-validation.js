@@ -404,6 +404,97 @@ async function runTests() {
       assert(res.status === 413, 'Excessively large body rejected with HTTP 413 (Payload Too Large)');
     }
 
+    // ---------------------------------------------------------
+    // Suite 6: Decoupled Backend REST API Endpoints (/api/...)
+    // ---------------------------------------------------------
+    console.log('\n--- Suite 6: Decoupled Backend REST API Endpoints ---');
+
+    // Test 21: GET /api/courses
+    {
+      const res = await fetch(`${baseUrl}/api/courses`);
+      const json = await res.json();
+      assert(res.status === 200, 'GET /api/courses returns HTTP 200');
+      assert(json.success === true, 'GET /api/courses returns success: true');
+      assert(Array.isArray(json.courses) && json.courses.length >= 6, 'GET /api/courses returns allowed course whitelist');
+    }
+
+    // Test 22: POST /api/register - Validation Failure (JSON 422)
+    {
+      const res = await fetch(`${baseUrl}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName: '123Bad' })
+      });
+      const json = await res.json();
+      assert(res.status === 422, 'POST /api/register returns HTTP 422 on validation failure');
+      assert(json.success === false, 'POST /api/register reports success: false');
+      assert(Boolean(json.errors && json.errors.fullName), 'POST /api/register returns structured field error object');
+    }
+
+    // Test 23: POST /api/register - Success (JSON 201)
+    let createdStudentId = '';
+    {
+      const res = await fetch(`${baseUrl}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: 'Siddharth Patil',
+          email: 'siddharth.patil@college.edu',
+          age: 22,
+          course: 'Artificial Intelligence & Data Science',
+          password: 'SecurePassword2026!',
+          confirmPassword: 'SecurePassword2026!'
+        })
+      });
+      const json = await res.json();
+      assert(res.status === 201, 'POST /api/register returns HTTP 201 Created on valid submission');
+      assert(json.success === true, 'POST /api/register reports success: true');
+      assert(Boolean(json.student && json.student.id), 'POST /api/register returns generated student ID');
+      assert(json.student.email === 'siddharth.patil@college.edu', 'POST /api/register returns sanitized email');
+      assert(!json.student.password && !json.student.passwordHash, 'Security: Passwords and raw hashes excluded from API response');
+      createdStudentId = json.student.id;
+    }
+
+    // Test 24: GET /api/students
+    {
+      const res = await fetch(`${baseUrl}/api/students`);
+      const json = await res.json();
+      assert(res.status === 200, 'GET /api/students returns HTTP 200');
+      assert(json.success === true, 'GET /api/students reports success: true');
+      assert(json.count > 0, 'GET /api/students returns enrolled count');
+      assert(json.students.some(s => s.id === createdStudentId), 'GET /api/students includes recently registered student');
+    }
+
+    // Test 25: GET /api/students/:id
+    {
+      const res = await fetch(`${baseUrl}/api/students/${createdStudentId}`);
+      const json = await res.json();
+      assert(res.status === 200, 'GET /api/students/:id returns HTTP 200 for existing student');
+      assert(json.student.id === createdStudentId, 'GET /api/students/:id returns matching student record');
+    }
+
+    // Test 26: DELETE /api/students/:id
+    {
+      const res = await fetch(`${baseUrl}/api/students/${createdStudentId}`, {
+        method: 'DELETE'
+      });
+      const json = await res.json();
+      assert(res.status === 200, 'DELETE /api/students/:id returns HTTP 200');
+      assert(json.success === true, 'DELETE /api/students/:id reports success: true');
+
+      // Verify student is removed
+      const checkRes = await fetch(`${baseUrl}/api/students/${createdStudentId}`);
+      assert(checkRes.status === 404, 'GET /api/students/:id returns HTTP 404 after deletion');
+    }
+
+    // Test 27: GET /api/health
+    {
+      const res = await fetch(`${baseUrl}/api/health`);
+      const json = await res.json();
+      assert(res.status === 200, 'GET /api/health returns HTTP 200');
+      assert(json.status === 'UP', 'GET /api/health reports UP');
+    }
+
   } finally {
     // Teardown server
     await new Promise((resolve) => server.close(resolve));

@@ -126,25 +126,34 @@ app.use((err, req, res, next) => {
 // Server Listener
 // ============================================================================
 if (process.env.NODE_ENV !== 'test') {
-  const server = app.listen(PORT, HOST, () => {
-    console.log('====================================================');
-    console.log('🚀 Student Registration System is running!');
-    console.log(`🌐 Local URL:     http://localhost:${PORT}`);
-    console.log(`📡 Network Host:  http://${HOST}:${PORT}`);
-    console.log(`🛡️  Validation:   100% Server-Side Enforced`);
-    console.log('====================================================');
-  });
+  function startServer(currentPort, attempts = 0) {
+    const server = app.listen(currentPort, HOST, () => {
+      console.log('====================================================');
+      console.log('🚀 Student Registration System (Frontend & Backend)');
+      console.log(`🌐 Web UI:        http://localhost:${currentPort}`);
+      console.log(`📡 Backend API:   http://localhost:${currentPort}/api/health`);
+      console.log(`🛡️  Validation:   100% Server-Side Enforced`);
+      console.log('====================================================');
+    });
 
-  server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.error(`\n❌ Error: Port ${PORT} is already in use by another running process.`);
-      console.error(`💡 Tip: Close any other terminal running the server, or start with another port:`);
-      console.error(`   $env:PORT=3001; npm start   (PowerShell)\n`);
-    } else {
-      console.error('Server error:', err);
-    }
-    process.exit(1);
-  });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        if (!process.env.PORT && attempts < 5) {
+          const nextPort = currentPort + 1;
+          console.warn(`⚠️  Port ${currentPort} is in use. Auto-switching to port ${nextPort}...`);
+          return startServer(nextPort, attempts + 1);
+        }
+        console.error(`\n❌ Error: Port ${currentPort} is already in use by another running process.`);
+        console.error(`💡 Tip: Close any other terminal running the server, or start with another port:`);
+        console.error(`   $env:PORT=3001; npm start   (PowerShell)\n`);
+      } else {
+        console.error('Server error:', err);
+      }
+      process.exit(1);
+    });
+  }
+
+  startServer(Number(PORT));
 }
 
 module.exports = app;
