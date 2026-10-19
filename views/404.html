@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found | Student Registration Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <h1>Student Registration Portal</h1>
+          <p>Node.js &amp; Express Server-Side Validation Demo</p>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">Register Form</a></li>
+        <li><a href="/students" class="nav-link">Registered Students</a></li>
+        <li><a href="/health" class="nav-link" target="_blank">API Health</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <div class="card error-page">
+      <div class="card-body">
+        <div class="error-code">404</div>
+        <h2 class="error-title">Page Not Found</h2>
+        <p class="error-desc">
+          The requested URL <code style="background: #e2e8f0; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;">{{REQUESTED_PATH}}</code> does not exist on this server.
+        </p>
+        
+        <div class="alert alert-info" style="text-align: left; margin-bottom: 2rem;">
+          <div class="alert-icon">ℹ️</div>
+          <div class="alert-content">
+            <strong>College Practical Route Handler:</strong>
+            <p>This 404 response is handled by a custom Express middleware catching all unregistered routes and returning HTTP status 404.</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="/" class="btn btn-primary">Return to Registration Form</a>
+          <a href="/students" class="btn btn-secondary">View Registered Students</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong>College Practical Examination</strong> - Web Technology (Node.js &amp; Express.js)
+      </div>
+      <div class="footer-badge">
+        Server State: In-Memory Storage • Passwords Hashed with PBKDF2
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

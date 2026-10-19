@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registered Students - Student Registration Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <h1>Student Registration Portal</h1>
+          <p>Node.js &amp; Express Server-Side Validation Demo</p>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">Register Form</a></li>
+        <li><a href="/students" class="nav-link active">Registered Students <span class="nav-badge">{{STUDENTS_COUNT}}</span></a></li>
+        <li><a href="/health" class="nav-link" target="_blank">API Health</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <!-- College Practical Context Banner -->
+    <section class="practical-banner">
+      <div class="banner-content">
+        <h2>
+          <span>📋</span> In-Memory Registered Students Roster
+        </h2>
+        <p>Demonstrating secure data retrieval: Passwords are protected with cryptographic salt + hash and never exposed in any view or API.</p>
+      </div>
+      <div class="badge-demo">
+        Total Students: {{STUDENTS_COUNT}}
+      </div>
+    </section>
+
+    <!-- Students Card -->
+    <div class="card">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 class="card-title">Enrolled Students</h2>
+          <p class="card-subtitle">List of students currently stored in server RAM during this active session.</p>
+        </div>
+        <a href="/" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Register New Student</a>
+      </div>
+
+      <div class="card-body">
+        
+        <!-- Explanatory note about In-Memory data reset -->
+        <div class="alert alert-info">
+          <div class="alert-icon">💡</div>
+          <div class="alert-content">
+            <strong>Practical Examination Note on In-Memory Storage:</strong>
+            <p>As per the practical requirements, student registrations are retained in volatile Node.js server memory (RAM array). When the server restarts or deploys a new build, this list resets. Plain-text passwords were cryptographically hashed upon reception and discarded immediately.</p>
+          </div>
+        </div>
+
+        {{STUDENTS_TABLE}}
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong>College Practical Examination</strong> - Web Technology (Node.js &amp; Express.js)
+      </div>
+      <div class="footer-badge">
+        Server State: In-Memory Storage • Passwords Hashed with PBKDF2
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

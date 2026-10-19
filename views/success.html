@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Successful - Student Registration Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <h1>Student Registration Portal</h1>
+          <p>Node.js &amp; Express Server-Side Validation Demo</p>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">Register Form</a></li>
+        <li><a href="/students" class="nav-link">Registered Students <span class="nav-badge">{{STUDENTS_COUNT}}</span></a></li>
+        <li><a href="/health" class="nav-link" target="_blank">API Health</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <div class="card success-card">
+      <div class="card-body">
+        
+        {{SUCCESS_BODY}}
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong>College Practical Examination</strong> - Web Technology (Node.js &amp; Express.js)
+      </div>
+      <div class="footer-badge">
+        Server State: In-Memory Storage • Passwords Hashed with PBKDF2
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

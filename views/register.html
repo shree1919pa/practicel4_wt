@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Registration - Server-Side Validation Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <h1>Student Registration Portal</h1>
+          <p>Node.js &amp; Express Server-Side Validation Demo</p>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link active">Register Form</a></li>
+        <li><a href="/students" class="nav-link">Registered Students <span class="nav-badge">{{STUDENTS_COUNT}}</span></a></li>
+        <li><a href="/health" class="nav-link" target="_blank" title="Check API Health in JSON">API Health</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <!-- College Practical Context Banner -->
+    <section class="practical-banner">
+      <div class="banner-content">
+        <h2>
+          <span>📌</span> Practical Examination: Web Technology
+        </h2>
+        <p>Demonstrating robust, multi-layer server-side validation using Node.js modules without client-side bypass vulnerabilities.</p>
+      </div>
+      <div class="badge-demo">
+        Server-Side Validation Active
+      </div>
+    </section>
+
+    <!-- Registration Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Student Registration Form</h2>
+        <p class="card-subtitle">Fill in the student details below. All fields are rigorously validated on the Node.js server.</p>
+      </div>
+
+      <div class="card-body">
+        
+        <!-- Server Error Notification Banner (Rendered dynamically if validation fails) -->
+        {{ERROR_SUMMARY}}
+
+        <!-- Form: Note the 'novalidate' attribute guarantees all testing reaches the Node.js server validation -->
+        <form action="/register" method="POST" novalidate id="studentRegistrationForm">
+          
+          <div class="form-grid">
+            
+            <!-- 1. Full Name -->
+            <div class="form-group">
+              <label for="fullName" class="form-label">
+                <span>Full Name <span class="required">*</span></span>
+                <span class="form-hint">3–50 letters &amp; spaces</span>
+              </label>
+              <div class="input-wrapper">
+                <input 
+                  type="text" 
+                  id="fullName" 
+                  name="fullName" 
+                  value="{{VAL_FULL_NAME}}" 
+                  placeholder="e.g. John Doe"
+                  class="form-control{{FULL_NAME_CLASS}}"
+                  autocomplete="name"
+                  aria-describedby="fullName-error"
+                >
+              </div>
+              {{FULL_NAME_ERROR}}
+            </div>
+
+            <!-- 2. Email Address -->
+            <div class="form-group">
+              <label for="email" class="form-label">
+                <span>Email Address <span class="required">*</span></span>
+                <span class="form-hint">Valid institutional/personal email</span>
+              </label>
+              <div class="input-wrapper">
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email" 
+                  value="{{VAL_EMAIL}}" 
+                  placeholder="e.g. john.doe@college.edu"
+                  class="form-control{{EMAIL_CLASS}}"
+                  autocomplete="email"
+                  aria-describedby="email-error"
+                >
+              </div>
+              {{EMAIL_ERROR}}
+            </div>
+
+            <!-- 3. Age -->
+            <div class="form-group">
+              <label for="age" class="form-label">
+                <span>Age <span class="required">*</span></span>
+                <span class="form-hint">Integer between 16 and 60</span>
+              </label>
+              <div class="input-wrapper">
+                <input 
+                  type="number" 
+                  id="age" 
+                  name="age" 
+                  value="{{VAL_AGE}}" 
+                  placeholder="e.g. 20"
+                  class="form-control{{AGE_CLASS}}"
+                  aria-describedby="age-error"
+                >
+              </div>
+              {{AGE_ERROR}}
+            </div>
+
+            <!-- 4. Course Name -->
+            <div class="form-group">
+              <label for="course" class="form-label">
+                <span>Course Program <span class="required">*</span></span>
+                <span class="form-hint">Choose approved program</span>
+              </label>
+              <div class="input-wrapper">
+                <select 
+                  id="course" 
+                  name="course" 
+                  class="form-control{{COURSE_CLASS}}"
+                  aria-describedby="course-error"
+                >
+                  <option value="">-- Select an Enrolled Course --</option>
+                  {{COURSE_OPTIONS}}
+                </select>
+              </div>
+              {{COURSE_ERROR}}
+            </div>
+
+            <!-- 5. Password -->
+            <div class="form-group">
+              <label for="password" class="form-label">
+                <span>Password <span class="required">*</span></span>
+                <span class="form-hint">Min 8 chars (A-Z, a-z, 0-9, special)</span>
+              </label>
+              <div class="input-wrapper">
+                <!-- Security: Password fields are never repopulated after validation errors -->
+                <input 
+                  type="password" 
+                  id="password" 
+                  name="password" 
+                  value="" 
+                  placeholder="Enter secure password"
+                  class="form-control{{PASSWORD_CLASS}}"
+                  autocomplete="new-password"
+                  aria-describedby="password-error"
+                >
+              </div>
+              {{PASSWORD_ERROR}}
+            </div>
+
+            <!-- 6. Confirm Password -->
+            <div class="form-group">
+              <label for="confirmPassword" class="form-label">
+                <span>Confirm Password <span class="required">*</span></span>
+                <span class="form-hint">Must match password</span>
+              </label>
+              <div class="input-wrapper">
+                <input 
+                  type="password" 
+                  id="confirmPassword" 
+                  name="confirmPassword" 
+                  value="" 
+                  placeholder="Re-enter password"
+                  class="form-control{{CONFIRM_PASSWORD_CLASS}}"
+                  autocomplete="new-password"
+                  aria-describedby="confirmPassword-error"
+                >
+              </div>
+              {{CONFIRM_PASSWORD_ERROR}}
+            </div>
+
+          </div>
+
+          <!-- Server Validation Rules Cheatsheet for Viva / Practical -->
+          <div class="validation-rules-card">
+            <h3 class="validation-rules-title">
+              <span>🛡️</span> Server-Side Validation Rules Enforced by Node.js:
+            </h3>
+            <ul class="rules-list">
+              <li><strong>Full Name:</strong> 3–50 chars, alphabets &amp; spaces only</li>
+              <li><strong>Email:</strong> RFC format, trimmed, lowercase &amp; uniqueness check</li>
+              <li><strong>Age:</strong> Whole integer strictly between 16 and 60</li>
+              <li><strong>Password:</strong> Min 8 chars with uppercase, lowercase, digit, &amp; symbol</li>
+              <li><strong>Confirm Password:</strong> Strict equality check with password</li>
+              <li><strong>Course:</strong> Validated against server whitelist of programs</li>
+            </ul>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              <span>Submit Registration</span>
+              <span>→</span>
+            </button>
+            <a href="/" class="btn btn-secondary">Reset Form</a>
+            <a href="/students" class="btn btn-secondary">View Registered Students</a>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong>College Practical Examination</strong> - Web Technology (Node.js &amp; Express.js)
+      </div>
+      <div class="footer-badge">
+        Server State: In-Memory Storage • Passwords Hashed with PBKDF2
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

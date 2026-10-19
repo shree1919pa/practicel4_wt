@@ -1,0 +1,26 @@
+{
+  "name": "student-registration-system",
+  "version": "1.0.0",
+  "description": "Student Registration System in Node.js & Express demonstrating comprehensive Server-Side Validation for Web Technology Practical",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "test": "node test/test-validation.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "server-side-validation",
+    "web-technology-practical",
+    "college-project"
+  ],
+  "author": "College Student",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
